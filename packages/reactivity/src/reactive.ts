@@ -1,37 +1,43 @@
 import { isObject } from "@vue/shared";
 
+export const enum ReactiveFlags {
+    IS_REACTIVE = "__v_isReactive",
+}
 
+// 将处理方法抽象出来
+const mutableHandlers = {
+    get(target, key, receiver) {
+        if (ReactiveFlags.IS_REACTIVE == key) {
+            return true;
+        }
+        return Reflect.get(target, key, receiver)
+    },
+    set(target, key, value, receiver) {
+        return Reflect.set(target, key, value, receiver)
+    },
+}
+
+const reactiveMap = new WeakMap();  // key只能是对象
 export function reactive(target) {
     // 非对象不处理
     if (!isObject(target)) {
         return target;
     }
 
-    // 代理，   通过代理对象操作属性，会去源对象上进行获取
-    const proxy = new Proxy(target, {
-        /**
-         * 当我取值时，调用该方法
-         * @param target 去哪里取，指该对象
-         * @param key 取什么属性
-         * @param receiver 指的就是当前代理对象 proxy
-         * @returns 对象上对应的属性
-         */
-        get(target, key, receiver) { 
-            return target[key];
-        },
-        /**
-         * 当我赋值时，调用该方法
-         * @param target 该对象
-         * @param key 属性
-         * @param value 要赋值的内容
-         * @param receiver 当前代理对象 proxy
-         * @returns true
-         */
-        set(target, key, value, receiver) {
-            target[key] = value
-            return true
-        },
-    });
+    // 此时如果有 get 会走 get函数
+    if (target[ReactiveFlags.IS_REACTIVE]) {
+        return target
+    }
+    
+    // 已代理的对象直接返回
+    const existsProxy = reactiveMap.get(target);
+    if (existsProxy) {
+        return existsProxy;
+    }
 
+    // 代理，   通过代理对象操作属性，会去源对象上进行获取
+    const proxy = new Proxy(target, mutableHandlers);
+
+    reactiveMap.set(target, proxy);
     return proxy
 }

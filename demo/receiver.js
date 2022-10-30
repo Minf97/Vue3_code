@@ -16,7 +16,7 @@ const proxy = new Proxy(person, {
      */
     get(target, key, receiver) {
         console.log("调用get方法");
-        return target[key]
+        return Reflect.get(target, key, receiver)
     },
     /**
      * 当我赋值时，调用该方法
@@ -28,8 +28,7 @@ const proxy = new Proxy(person, {
      */
     set(target, key, value, receiver) {
         console.log("调用set方法");
-        target[key] = value
-        return true
+        return Reflect.set(target, key, value, receiver)
     }
 })
 
