@@ -11,20 +11,66 @@
 <body>
     <div id="app"></div>
     <script type="module">
-        // import { reactive, effect } from '/node_modules/@vue/reactivity/dist/reactivity.esm-browser.js'
-        import { reactive, effect } from './reactivity.esm.js'
+        import { reactive, effect } from '/node_modules/@vue/reactivity/dist/reactivity.esm-browser.js'
+        // import { reactive, effect } from './reactivity.esm.js'
 
-        const state = reactive({ name: 'jw', age: 30 })
-        // reactive 创建一个响应式对象
-        // effect 副作用函数，默认会执行一次，数据变化后会再次执行
+        // const state = reactive({ name: '小鱼', age: 18 })
+        // // reactive 创建一个响应式对象
+        // // effect 副作用函数，默认会执行一次，数据变化后会再次执行
 
-        effect(() => {
-            app.innerHTML = state.name;
+        // effect(() => {
+        //     app.innerHTML = state.name + state.age;
+        // })
+
+        // setInterval(() => {
+        //     state.age++;
+        // }, 1000);
+
+
+        let person = {
+            name: '小鱼',
+            get aliasName() {
+                return '**' + this.name + '**'
+            }
+        }
+
+        // 创建一个proxy
+        const proxy = new Proxy(person, {
+            /**
+             * 当我取值时，调用该方法
+             * @param target 去哪里取，指该对象
+             * @param key 取什么属性
+             * @param receiver 指的就是当前代理对象 proxy
+             * @returns 对象上对应的属性
+             */
+            get(target, key, receiver) {
+                console.log("调用get方法");
+                return target[key]
+            },
+            /**
+             * 当我赋值时，调用该方法
+             * @param target 该对象
+             * @param key 属性
+             * @param value 要赋值的内容
+             * @param receiver 当前代理对象 proxy
+             * @returns true
+             */
+            set(target, key, value, receiver) {
+                console.log("调用set方法");
+                target[key] = value
+                return true
+            }
         })
 
+        effect(() => {
+            app.innerHTML = proxy.name;
+        })
         setTimeout(() => {
-            state.name = 'zf';
+            console.log(person.name, person.aliasName);
+            proxy.name = 'ddd';
+            console.log(person.name, person.aliasName);
         }, 1000);
+
     </script>
 </body>
 
