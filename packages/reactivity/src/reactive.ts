@@ -1,21 +1,11 @@
 import { isObject } from "@vue/shared";
+import { mutableHandlers } from "./baseHandler";
 
 export const enum ReactiveFlags {
     IS_REACTIVE = "__v_isReactive",
 }
 
-// 将处理方法抽象出来
-const mutableHandlers = {
-    get(target, key, receiver) {
-        if (ReactiveFlags.IS_REACTIVE == key) {
-            return true;
-        }
-        return Reflect.get(target, key, receiver)
-    },
-    set(target, key, value, receiver) {
-        return Reflect.set(target, key, value, receiver)
-    },
-}
+
 
 const reactiveMap = new WeakMap();  // key只能是对象
 export function reactive(target) {
@@ -29,7 +19,7 @@ export function reactive(target) {
         return target
     }
     
-    // 已代理的对象直接返回
+    // 缓存，防止多次代理
     const existsProxy = reactiveMap.get(target);
     if (existsProxy) {
         return existsProxy;
